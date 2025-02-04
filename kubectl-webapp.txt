@@ -1,0 +1,75 @@
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ view redis-leader-deployment.yaml 
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl apply -f redis-leader-deployment.yaml --namespace webapp
+deployment.apps/redis-leader created
+
+
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl apply -f redis-leader-service.yaml --namespace webapp
+service/redis-leader created
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl get service --namespace webapp
+NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+redis-leader   ClusterIP   10.4.4.144   <none>        6379/TCP   15s
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+
+
+
+ricky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl apply -f redis-follower-deployment.yaml --namespace webapp
+deployment.apps/redis-follower created
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+
+
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl get pods --namespace webapp
+NAME                              READY   STATUS    RESTARTS   AGE
+redis-follower-6d7fccb64f-pxdbz   1/1     Running   0          59s
+redis-follower-6d7fccb64f-rnkjf   1/1     Running   0          59s
+redis-leader-57f98b4cfd-qll6g     1/1     Running   0          5m33s
+
+
+
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl apply -f frontend-deployment.yaml 
+deployment.apps/frontend created
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl get services --namespace webapp
+NAME             TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+redis-follower   ClusterIP   10.4.10.104   <none>        6379/TCP   3m44s
+redis-leader     ClusterIP   10.4.4.144    <none>        6379/TCP   8m26s
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+
+
+
+
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl apply -f frontend-service.yaml --namespace webapp
+service/frontend created
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl get services --namespace webapp
+NAME             TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+frontend         LoadBalancer   10.4.11.101   <pending>     80:30688/TCP   9s
+redis-follower   ClusterIP      10.4.10.104   <none>        6379/TCP       6m48s
+redis-leader     ClusterIP      10.4.4.144    <none>        6379/TCP       11m
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+
+
+
+
+
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl apply -f frontend-deployment.yaml --namespace webapp
+deployment.apps/frontend created
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ kubectl get pods --namespace webapp
+NAME                              READY   STATUS    RESTARTS   AGE
+frontend-6b5f4cf68c-8ftmp         1/1     Running   0          12s
+frontend-6b5f4cf68c-lh2wq         1/1     Running   0          12s
+frontend-6b5f4cf68c-tbg66         1/1     Running   0          11s
+redis-follower-6d7fccb64f-pxdbz   1/1     Running   0          24m
+redis-follower-6d7fccb64f-rnkjf   1/1     Running   0          24m
+redis-leader-57f98b4cfd-qll6g     1/1     Running   0          29m
+ericky_virtual@bastion:~/challenge/webapp/guestbook$ 
+
+
+
+
