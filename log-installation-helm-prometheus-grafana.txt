@@ -1,0 +1,374 @@
+
+
+helm search hub prometheus
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+helm show values prometheus-community/prometheus > values-temp.yaml
+
+echo "server.persistentVolume.existingClaim: prometheus-volumenclaim" > values.yaml
+
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ cat prometheus-volumenclaim.yaml 
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name:kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: prometheus-volumeclaim
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gim
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+      
+      
+      
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ kubectl apply -f prometheus-volumenclaim.yaml --namespace=monitoring
+persistentvolumeclaim/prometheus-volumeclaim created
+
+
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ kubectl get pvc --namespace=monitoring
+NAME                     STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+prometheus-volumeclaim   Pending                                      standard-rwo   <unset>                 74s
+
+
+helm install -f values.yaml prometheus prometheus-community/prometheus --namespace monitoring
+
+
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ helm delete prometheus --namespace monitoring
+release "prometheus" uninstalled
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ kubectl get pods -A
+NAMESPACE         NAME                                                READY   STATUS    RESTARTS   AGE
+gke-managed-cim   kube-state-metrics-0                                2/2     Running   0          12h
+gmp-system        collector-p8dmw                                     2/2     Running   0          12h
+gmp-system        gmp-operator-c9cff9ff9-h6pbj                        1/1     Running   0          12h
+kube-system       event-exporter-gke-545bc64577-pv587                 2/2     Running   0          12h
+kube-system       fluentbit-gke-xqnqq                                 3/3     Running   0          12h
+kube-system       gke-metadata-server-vtf9g                           1/1     Running   0          12h
+kube-system       gke-metrics-agent-f2lww                             3/3     Running   0          12h
+kube-system       konnectivity-agent-5b6cffb575-6wvxb                 2/2     Running   0          12h
+kube-system       konnectivity-agent-autoscaler-586fbff6d5-4b787      1/1     Running   0          12h
+kube-system       kube-dns-7bc7495c9b-qgshl                           5/5     Running   0          12h
+kube-system       kube-dns-autoscaler-56cc47b86c-c2sx7                1/1     Running   0          12h
+kube-system       kube-proxy-gke-development-dev-pool-8f024f68-6kn2   1/1     Running   0          12h
+kube-system       l7-default-backend-864fd6c486-8klb6                 1/1     Running   0          12h
+kube-system       metrics-server-v1.31.0-5db6dbd8bc-8mtkj             1/1     Running   0          12h
+kube-system       netd-zp6zj                                          3/3     Running   0          12h
+kube-system       pdcsi-node-zmds5                                    2/2     Running   0          12h
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ 
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ 
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ 
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ helm install -f values.yaml prometheus prometheus-community/prometheus --namespace monitoring
+NAME: prometheus
+LAST DEPLOYED: Mon Feb  3 19:12:50 2025
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+The Prometheus server can be accessed via port 80 on the following DNS name from within your cluster:
+prometheus-server.monitoring.svc.cluster.local
+
+
+Get the Prometheus server URL by running these commands in the same shell:
+  export POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=prometheus,app.kubernetes.io/instance=prometheus" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace monitoring port-forward $POD_NAME 9090
+
+
+The Prometheus alertmanager can be accessed via port 9093 on the following DNS name from within your cluster:
+prometheus-alertmanager.monitoring.svc.cluster.local
+
+
+Get the Alertmanager URL by running these commands in the same shell:
+  export POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=alertmanager,app.kubernetes.io/instance=prometheus" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace monitoring port-forward $POD_NAME 9093
+#################################################################################
+######   WARNING: Pod Security Policy has been disabled by default since    #####
+######            it deprecated after k8s 1.25+. use                        #####
+######            (index .Values "prometheus-node-exporter" "rbac"          #####
+###### .          "pspEnabled") with (index .Values                         #####
+######            "prometheus-node-exporter" "rbac" "pspAnnotations")       #####
+######            in case you still need it.                                #####
+#################################################################################
+
+
+The Prometheus PushGateway can be accessed via port 9091 on the following DNS name from within your cluster:
+prometheus-prometheus-pushgateway.monitoring.svc.cluster.local
+
+
+Get the PushGateway URL by running these commands in the same shell:
+  export POD_NAME=$(kubectl get pods --namespace monitoring -l "app=prometheus-pushgateway,component=pushgateway" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace monitoring port-forward $POD_NAME 9091
+
+For more information on running Prometheus, visit:
+https://prometheus.io/
+
+
+
+
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ helm list --namespace monitoring
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+prometheus      monitoring      1               2025-02-03 19:12:50.449125542 +0000 UTC deployed        prometheus-27.2.0       v3.1.0     
+
+
+
+---------------------------
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ helm repo add grafana https://grafana.github.io/helm-charts 
+"grafana" has been added to your repositories
+
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "grafana" chart repository
+...Successfully got an update from the "prometheus-community" chart repository
+Update Complete. ⎈Happy Helming!⎈
+
+
+
+helm show values grafana/grafana > values-temp.yaml
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ cat values.yaml 
+persistence:
+  enabled: true
+  
+  
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ helm install grafana grafana/grafana --namespace monitoring -f values.yaml 
+NAME: grafana
+LAST DEPLOYED: Mon Feb  3 19:37:27 2025
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get your 'admin' user password by running:
+
+   kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+
+2. The Grafana server can be accessed via port 80 on the following DNS name from within your cluster:
+
+   grafana.monitoring.svc.cluster.local
+
+   Get the Grafana URL to visit by running these commands in the same shell:
+     export POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+     kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+3. Login with the password from step 1 and the username: admin
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ 
+
+
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ kubectl get pods --namespace monitoring
+NAME                                                 READY   STATUS    RESTARTS   AGE
+grafana-bfc4b49bc-gq9f8                              1/1     Running   0          93s
+prometheus-alertmanager-0                            1/1     Running   0          26m
+prometheus-kube-state-metrics-6777668f6-2p2jx        1/1     Running   0          26m
+prometheus-prometheus-node-exporter-s4kcv            1/1     Running   0          26m
+prometheus-prometheus-pushgateway-66c5444c7b-xgjbm   1/1     Running   0          26m
+prometheus-server-68ddd6f8f5-s7z65                   2/2     Running   0          26m
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ 
+
+
+ricky_virtual@bastion:~/challenge/monitoring/grafana$ cat grafana-service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+    meta.helm.sh/release-name: grafana
+    meta.helm.sh/release-namespace: monitoring
+  creationTimestamp: "2025-02-03T19:37:28Z"
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/version: 11.4.1
+    helm.sh/chart: grafana-8.8.6
+  name: grafana
+  namespace: monitoring
+  resourceVersion: "515394"
+  uid: 9ea3d667-dee4-426b-aa5a-72bd1755dd47
+spec:
+  clusterIP: 10.4.3.172
+  clusterIPs:
+  - 10.4.3.172
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: service
+    port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ 
+
+
+
+
+
+
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ cat grafana-service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+    meta.helm.sh/release-name: grafana
+    meta.helm.sh/release-namespace: monitoring
+  creationTimestamp: "2025-02-03T19:37:28Z"
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/version: 11.4.1
+    helm.sh/chart: grafana-8.8.6
+  name: grafana
+  namespace: monitoring
+  resourceVersion: "515394"
+  uid: 9ea3d667-dee4-426b-aa5a-72bd1755dd47
+spec:
+  clusterIP: 10.4.3.172
+  clusterIPs:
+  - 10.4.3.172
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: service
+    port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+  
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ kubectl apply -f grafana-service.yaml  --namespace monitoring 
+Warning: resource services/grafana is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+service/grafana configured
+
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ kubectl get services --namespace monitoring
+NAME                                  TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)        AGE
+grafana                               LoadBalancer   10.4.3.172    34.44.132.43   80:30253/TCP   39m
+prometheus-alertmanager               ClusterIP      10.4.3.28     <none>         9093/TCP       63m
+prometheus-alertmanager-headless      ClusterIP      None          <none>         9093/TCP       63m
+prometheus-kube-state-metrics         ClusterIP      10.4.12.251   <none>         8080/TCP       63m
+prometheus-prometheus-node-exporter   ClusterIP      10.4.3.178    <none>         9100/TCP       63m
+prometheus-prometheus-pushgateway     ClusterIP      10.4.8.211    <none>         9091/TCP       63m
+prometheus-server                     ClusterIP      10.4.4.234    <none>         80/TCP         63m
+
+
+
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+OQsymCsfjYGTYVvx84qQM5iQLIk2JkorYq45capa
+ericky_virtual@bastion:~/challenge/monitoring/grafana$ 
+
+
+
+
+
+---------------------
+
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ cat prometheus-service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+    meta.helm.sh/release-name: prometheus
+    meta.helm.sh/release-namespace: monitoring
+  creationTimestamp: "2025-02-03T19:12:52Z"
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: prometheus
+    app.kubernetes.io/version: v3.1.0
+    helm.sh/chart: prometheus-27.2.0
+  name: prometheus-server
+  namespace: monitoring
+  resourceVersion: "499179"
+  uid: 1164744a-63cb-46c5-bbcd-c855f40b89aa
+spec:
+  clusterIP: 10.4.4.234
+  clusterIPs:
+  - 10.4.4.234
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ kubectl get  service prometheus-server --namespace monitoring
+NAME                TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+prometheus-server   ClusterIP   10.4.4.234   <none>        80/TCP    97m
+ericky_virtual@bastion:~/challenge/monitoring/prometheus$ 
+
+
+
+
+ricky_virtual@bastion:~/challenge/monitoring/prometheus$ kubectl exec -n monitoring grafana-bfc4b49bc-gq9f8  -it -- /bin/sh 
+/usr/share/grafana $ 
+/usr/share/grafana $ 
+/usr/share/grafana $ ls
+LICENSE  bin      conf     public
+/usr/share/grafana $ curl http://prometheus-server.monitoring.svc.cluster.local
+<a href="/query">Found</a>.
+
+/usr/share/grafana $ 
+
+
+
+ericky_virtual@cloudshell:~ (useful-academy-449723-v7)$ helm list --namespace monitoring
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+grafana         monitoring      1               2025-02-03 19:37:27.551232002 +0000 UTC deployed        grafana-8.8.6           11.4.1     
+prometheus      monitoring      1               2025-02-03 19:12:50.449125542 +0000 UTC deployed        prometheus-27.2.0       v3.1.0     
+
+
+
+
+
+
+
+
+
+
+
