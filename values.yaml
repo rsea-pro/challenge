@@ -1,2 +1,1 @@
-persistence:
-  enabled: true
+server.persistentVolume.existingClaim: prometheus-volumenclaim
